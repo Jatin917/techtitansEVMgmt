@@ -38,4 +38,15 @@ const portReportSchema = new mongoose.Schema({
   reported_at: { type: Date, default: Date.now },
 });
 
-module.exports = mongoose.model("PortReport", portReportSchema);
+
+const anomalySchema = new mongoose.Schema({
+    port_id: { type: String, required: true },
+    station_id: { type: String, required: true },
+    status: {
+      type: String,
+      enum: ["suspicious", "normal", "anomaly"],
+      required: true,
+    },
+})
+export const Anomaly = mongoose.model("Anomaly", anomalySchema);
+export const PortReport = mongoose.model("PortReport", portReportSchema);

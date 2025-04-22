@@ -1,11 +1,12 @@
 import './App.css'
+import EVPortTracker from './components/tracking'
 
 function App() {
 
   return (
-    <div className='bg-red-800'>
-      hello jaitin
-    </div>
+    <>
+      <EVPortTracker />
+    </>
   )
 }
 
