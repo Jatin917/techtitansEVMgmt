@@ -1,0 +1,1 @@
+// when someone plug the charger in their machine, status of machine need to be changed and should be updated in the admin portal that someone is using the port same for unplugging things

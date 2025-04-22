@@ -1,5 +1,4 @@
-import mongoose from "mongoose";
-
+import mongoose, { model } from "mongoose";
 const vehicleChargeSchema = new mongoose.Schema(
   {
     vehicle_id: { type: String, default: null },
@@ -9,10 +8,8 @@ const vehicleChargeSchema = new mongoose.Schema(
     time_taken_minutes: { type: Number, required: true },
     charged_percent: { type: Number, required: true },
     energy_consumed_kWh: { type: Number, required: true },
-
-    electricity_cost: { type: Number, required: true }, // or calculate dynamically
-    // cost_per_percent removed
-
+    electricity_cost: { type: Number, required: true },
+    cost_per_percent: { type: Number },
     user_rating: { type: Number },
     review: { type: String, default: "" },
   },
@@ -27,26 +24,15 @@ const portReportSchema = new mongoose.Schema({
     type: String,
     enum: ["idle", "charging", "fault", "offline"],
     required: true,
+    timestamp: { type: Date, required: true },
   },
   last_ping: { type: Date, default: Date.now },
 
-  cost_per_kWh: { type: Number, required: true }, // added at port level
-
   avg_time_to_charge_minutes: { type: Number, default: 0 },
-  vehicle_charges: [vehicleChargeSchema],
+  vehicle_charges: [vehicleChargeSchema], // Array of recent charge events
 
   reported_at: { type: Date, default: Date.now },
 });
 
-
-const anomalySchema = new mongoose.Schema({
-    port_id: { type: String, required: true },
-    station_id: { type: String, required: true },
-    status: {
-      type: String,
-      enum: ["suspicious", "normal", "anomaly"],
-      required: true,
-    },
-})
-export const Anomaly = mongoose.model("Anomaly", anomalySchema);
-export const PortReport = mongoose.model("PortReport", portReportSchema);
+const PortReport = mongoose.model('PortReport', portReportSchema);
+export default PortReport;
