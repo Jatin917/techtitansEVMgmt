@@ -24,6 +24,7 @@ const portReportSchema = new mongoose.Schema({
     type: String,
     enum: ["idle", "charging", "fault", "offline"],
     required: true,
+    timestamp: { type: Date, required: true },
   },
   last_ping: { type: Date, default: Date.now },
 
