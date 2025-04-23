@@ -177,7 +177,7 @@ export default function EVPortTracker() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {selectedPort.vehicle_charges.map((charge, index) => (
+                  {selectedPort.vehicle_charges && selectedPort.vehicle_charges.map((charge, index) => (
                     <tr key={index} className="hover:bg-gray-50">
                       <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{charge.vehicle_id}</td>
                       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(charge.start_time)}</td>
@@ -194,7 +194,7 @@ export default function EVPortTracker() {
             </div>
           </div>
           
-          {selectedPort.vehicle_charges.length > 0 && (
+          {selectedPort.vehicle_charges && selectedPort.vehicle_charges.length > 0 && (
             <div>
               <h3 className="text-lg font-semibold mb-4">Latest Review</h3>
               <div className="bg-gray-50 p-4 rounded-lg">
@@ -255,7 +255,7 @@ export default function EVPortTracker() {
                       </div>
                     </div>
                     
-                    {port.vehicle_charges.length > 0 && (
+                    {port.vehicle_charges && port.vehicle_charges.length > 0 && (
                       <div className="border-t border-gray-200 p-4 bg-gray-50">
                         <div className="flex justify-between items-center">
                           <h3 className="font-medium text-gray-700">Latest Session</h3>
