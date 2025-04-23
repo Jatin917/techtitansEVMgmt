@@ -4,6 +4,8 @@ import numpy as np
 from geopy.distance import geodesic
 import pandas as pd
 from model import ChargingStationOptimizer
+from flask_cors import CORS
+
 
 # Load the trained model
 with open("svm_ev_anomaly_model.pkl", "rb") as file:
@@ -15,6 +17,8 @@ with open('charging_station_model.pkl', 'rb') as f:
 model.cluster_analysis()
 
 app = Flask(__name__)
+CORS(app)  # Allow all origins
+
 
 @app.route("/anomaly/predict", methods=["POST"])
 def predict():
