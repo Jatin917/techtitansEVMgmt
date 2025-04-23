@@ -49,6 +49,7 @@ export const getAllPorts = async(req, res) =>{
             return {
               ...port,
               totalElectricityConsumption,
+              averageEneryConsumed:totalElectricityConsumption/(vehicleCharges.length),
               userTraffic: {
                 lastDay: lastDayTraffic,
                 last7Days: last7DaysTraffic,
@@ -96,5 +97,38 @@ return res.status(200).json({ data: strippedData });
 
     } catch (error) {
         console.log(error);
+    }
+}
+
+export const getAnamolyPercentage = async(req, res)=>{
+    try {
+        const ports = await PortReport.find({});
+        const anamolyPercentage = await Promise.all(ports.map(async (port)=>{
+            const portId = port.port_id;
+            const response = await getPortById(portId);
+            const averageEneryConsumed = response.averageEneryConsumed;
+
+        }))
+    } catch (error) {
+        
+    }
+}
+
+export const postVehicleChargedData = async (req, res)=>{
+    try {
+        const portId = req.body.port_id;
+        const energyConsumed = req.body.energyConsumed;
+        // abhi ke liye hum average hi utha rhe hain 
+        const averageEneryConsumedData = await getPortById(portId);
+        const averageEneryConsumed = averageEneryConsumedData.averageEneryConsumed;
+        // yha prr request bheji that ki wo nikal kr le aayo suspicious hain yaa nhi
+        const response = await Promise.all(setTimeout(console.log("ml model to check wheather it is suspicous"), 1000));
+        if(response.suspicious){
+            // yhaa db main update kr denge that it is suspicious
+            // yhaa last 5 anomoly ki value ko nikalenge and if all are suspicious hain then we need to notify someone ki port sahi nhi hain and we will also check from here that ki that us station ke sare hi suspicious to nhi if to usko offline mark kr denge and notify kr denge kisi ko ki use check krke aao
+        }
+
+    } catch (error) {
+        
     }
 }
