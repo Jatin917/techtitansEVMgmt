@@ -39,13 +39,6 @@ export const getAllPorts = async(req, res) =>{
               0
             );
 
-            // const reportedAt = new Date(port.reported_at);
-            // const isFault = port.status === "fault";
-
-            // const lastDayFault = isFault && reportedAt >= oneDayAgo ? 1 : 0;
-            // const last7DaysFault = isFault && reportedAt >= sevenDaysAgo && reportedAt < oneDayAgo ? 1 : 0;
-            // const last30DaysFault = isFault && reportedAt >= thirtyDaysAgo && reportedAt < sevenDaysAgo ? 1 : 0;
-            
             return {
               ...port,
               totalElectricityConsumption,
@@ -89,10 +82,9 @@ const newUpdatedData = updatedData.map(port => ({
     last30FaultValue
 }));
 
-// Strip out vehicle_charges from each port object
-const strippedData = newUpdatedData.map(({ vehicle_charges, ...rest }) => rest);
 
-return res.status(200).json({ data: strippedData });
+
+return res.status(200).json({ data: newUpdatedData });
 
     } catch (error) {
         console.log(error);
