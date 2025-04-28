@@ -56,6 +56,7 @@ export const getAllPorts = async(req, res) =>{
         const last7DayFault =  response.filter(
             v => new Date(v.reported_at) >= sevenDaysAgo
             );
+            // hello jiii
         const last30DayFault =  response.filter(
             v => new Date(v.reported_at) >= thirtyDaysAgo
             );
