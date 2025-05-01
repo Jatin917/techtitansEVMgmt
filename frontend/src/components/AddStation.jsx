@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { GoogleMap, Marker, Autocomplete, useJsApiLoader } from '@react-google-maps/api'
 import Papa from 'papaparse';
+import axios from 'axios'
 
 
 const libraries = ['places']
@@ -35,6 +36,8 @@ export default function AddStation() {
   })
 
   const [formData, setFormData] = useState({
+port_id: 'UID-' + Math.random().toString(36).substring(2, 10), // or any default logic
+  station_id: 'STN-' + Math.random().toString(36).substring(2, 10),
     name: '',
     address: '',
     coordinates: null,
@@ -265,9 +268,12 @@ export default function AddStation() {
     }
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async(e) => {
     e.preventDefault()
     console.log('Form submitted:', formData)
+    await axios.post('http://localhost:5000/add_station',{"latitude":formData.coordinates.lat, "longitude":formData.coordinates.lng});
+    await axios.post('http://localhost:8000/admin/add-station', formData);
+     
     // Here you would typically send data to your API
     navigate('/stations')
   }
