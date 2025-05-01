@@ -64,38 +64,74 @@ port_id: 'UID-' + Math.random().toString(36).substring(2, 10), // or any default
   const [existingPorts, setExistingPorts] = useState([])
   const [predictedPorts, setPredictedPorts] = useState([])
   const [loading, setLoading] = useState(false)
+  const [csvData, setCsvData] = useState([]);
+  const [newRow, setNewRow] = useState([{
 
+  }])
+
+
+const getCSVRowObject = (formData) => {
+  const {
+    port_id, name, address, coordinates, type, status,
+    connectors, powerOutput, pricePerKwh
+  } = formData;
+
+  const latitude = coordinates?.lat || '';
+  const longitude = coordinates?.lng || '';
+
+  const row = {
+    uid: port_id,
+    name: name,
+    vendor_name: 'VendorX',
+    address: address,
+    latitude: latitude,
+    longitude: longitude,
+    city: 'Unknown City',
+    country: 'Unknown Country',
+    open: '09:00',
+    close: '21:00',
+    logo_url: 'https://example.com/logo.png',
+    staff: Math.floor(Math.random() * 4) + 1, // 1-4
+    payment_modes: 'UPI,CARD,CASH',
+    contact_numbers: '9876543210',
+    station_type: 'public',
+    postal_code: '560001',
+    zone: 'Zone A',
+    '0': 'NA',
+    available: status === 'active' ? 1 : 0,
+    capacity: connectors,
+    cost_per_unit: pricePerKwh,
+    power_type: powerOutput > 50 ? 'DC' : 'AC',
+    total: connectors,
+    type: type,
+    vehicle_type: 'EV'
+  };
+
+  return row;
+};
+
+
+const handleAddRow = (formData) => {
+  const newRowObj = getCSVRowObject(formData);
+
+  // Append to state (optional)
+  const updatedData = [...csvData, newRowObj];
+  setCsvData(updatedData);
+
+  // You can now send newRowObj directly in a POST request to backend
+  return newRowObj;
+};
+
+  
 
   // load existing ev station
   useEffect(() => {
     const loadExistingPorts = async () => {
       try {
-        const response = await fetch('/charging_stations.csv');
-        const text = await response.text();
-  
-        Papa.parse(text, {
-          header: true,
-          complete: (results) => {
-            const ports = results.data
-              .filter(port => port.latitude && port.longitude)
-              .map(port => {
-                const lat = parseFloat(port.latitude);
-                const lng = parseFloat(port.longitude);
-                // console.log('Port coordinates:', port.latitude, port.longitude, lat, lng);
-  
-                return {
-                  ...port,
-                  coordinates: {
-                    lat,
-                    lng
-                  }
-                };
-              });
-  
-            setExistingPorts(ports);
-          }
-        });
-  
+        const data = await fetch('http://localhost:8000/admin/allstations');
+        const response = await data.json()
+        setExistingPorts(response.data);
+        console.log("returned values ", response)
       } catch (error) {
         console.error('Error loading existing ports:', error);
       }
@@ -103,7 +139,7 @@ port_id: 'UID-' + Math.random().toString(36).substring(2, 10), // or any default
   
     loadExistingPorts();
   }, []);
-  
+  console.log("existing ports are ", existingPorts)
   // Fetch predicted locations when viewMode changes to predicted
   useEffect(() => {
     console.log
@@ -270,10 +306,14 @@ port_id: 'UID-' + Math.random().toString(36).substring(2, 10), // or any default
 
   const handleSubmit = async(e) => {
     e.preventDefault()
-    console.log('Form submitted:', formData)
+    // console.log('Form submitted:')
     await axios.post('http://localhost:5000/add_station',{"latitude":formData.coordinates.lat, "longitude":formData.coordinates.lng});
+    // console.log("hello")
     await axios.post('http://localhost:8000/admin/add-station', formData);
-     
+    // console.log("hello jii")
+     const row = handleAddRow(formData)
+     console.log("row to be added ", row);
+     await axios.post('http://localhost:8000/admin/addrowstation', row);
     // Here you would typically send data to your API
     navigate('/stations')
   }
@@ -556,7 +596,7 @@ port_id: 'UID-' + Math.random().toString(36).substring(2, 10), // or any default
                   )}
   
                   {/* Existing ports markers */}
-                  {viewMode === 'existing' && existingPorts.map((port, index) => (
+                  {viewMode === 'existing' && existingPorts  && existingPorts.map((port, index) => (
                     <Marker
                       key={`existing-${index}`}
                       position={port.coordinates}
