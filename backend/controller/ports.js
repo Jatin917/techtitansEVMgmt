@@ -39,13 +39,6 @@ export const getAllPorts = async(req, res) =>{
               0
             );
 
-            // const reportedAt = new Date(port.reported_at);
-            // const isFault = port.status === "fault";
-
-            // const lastDayFault = isFault && reportedAt >= oneDayAgo ? 1 : 0;
-            // const last7DaysFault = isFault && reportedAt >= sevenDaysAgo && reportedAt < oneDayAgo ? 1 : 0;
-            // const last30DaysFault = isFault && reportedAt >= thirtyDaysAgo && reportedAt < sevenDaysAgo ? 1 : 0;
-            
             return {
               ...port,
               totalElectricityConsumption,
@@ -90,10 +83,9 @@ const newUpdatedData = updatedData.map(port => ({
     last30FaultValue
 }));
 
-// Strip out vehicle_charges from each port object
-const strippedData = newUpdatedData.map(({ vehicle_charges, ...rest }) => rest);
 
-return res.status(200).json({ data: strippedData });
+
+return res.status(200).json({ data: newUpdatedData });
 
     } catch (error) {
         console.log(error);
@@ -130,5 +122,24 @@ export const postVehicleChargedData = async (req, res)=>{
 
     } catch (error) {
         
+    }
+}
+
+export const addStation = async(req, res) =>{
+    try {
+        // console.log("chal rha hain", req.body);
+        const formData = req.body;
+        const validStatuses = ['active', 'inactive', 'maintenance']; // Define valid statuses for the station
+        console.log("status is ",  formData.status)
+        if (!validStatuses.includes(formData.status)) {
+        return res.status(400).json({ message: 'Invalid status value' });
+        }
+        // console.log(formData);
+        const response = await PortReport.create({port_id:formData.port_id, station_id:formData.station_id, status:formData.status, name:formData.name, connectors:formData.connectors, address:formData.address,  pricePerKwh:formData.pricePerKwh, type:formData.type, powerOutput:formData.powerOutput, coordinates:formData.coordinates})
+        console.log(response);
+        if(!response) return res.status(401).json({message:"Error adding the stations"});
+        return res.status(200).json({message:"Added Station"})
+    } catch (error) {
+        console.log(error)
     }
 }

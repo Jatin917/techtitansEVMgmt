@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { GoogleMap, Marker, Autocomplete, useJsApiLoader } from '@react-google-maps/api'
+import Papa from 'papaparse';
+
 
 const libraries = ['places']
 const mapContainerStyle = {
@@ -10,6 +12,19 @@ const mapContainerStyle = {
 const defaultCenter = {
   lat: 0,
   lng: 0,
+}
+
+// Marker icons
+const existingPortIcon = {
+  url: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
+}
+
+const predictedPortIcon = {
+  url: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'
+}
+
+const newPortIcon = {
+  url: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
 }
 
 export default function AddStation() {
@@ -36,10 +51,94 @@ export default function AddStation() {
     lat: '',
     lng: ''
   })
-
   const [map, setMap] = useState(null)
   const [autocomplete, setAutocomplete] = useState(null)
   const autocompleteRef = useRef(null)
+  
+  // New state for toggle and predicted locations
+  const [viewMode, setViewMode] = useState('existing') // 'existing' or 'predicted'
+  const [nLocations, setNLocations] = useState(1)
+  const [existingPorts, setExistingPorts] = useState([])
+  const [predictedPorts, setPredictedPorts] = useState([])
+  const [loading, setLoading] = useState(false)
+
+
+  // load existing ev station
+  useEffect(() => {
+    const loadExistingPorts = async () => {
+      try {
+        const response = await fetch('/charging_stations.csv');
+        const text = await response.text();
+  
+        Papa.parse(text, {
+          header: true,
+          complete: (results) => {
+            const ports = results.data
+              .filter(port => port.latitude && port.longitude)
+              .map(port => {
+                const lat = parseFloat(port.latitude);
+                const lng = parseFloat(port.longitude);
+                // console.log('Port coordinates:', port.latitude, port.longitude, lat, lng);
+  
+                return {
+                  ...port,
+                  coordinates: {
+                    lat,
+                    lng
+                  }
+                };
+              });
+  
+            setExistingPorts(ports);
+          }
+        });
+  
+      } catch (error) {
+        console.error('Error loading existing ports:', error);
+      }
+    };
+  
+    loadExistingPorts();
+  }, []);
+  
+  // Fetch predicted locations when viewMode changes to predicted
+  useEffect(() => {
+    console.log
+    if (viewMode === 'predicted' && formData.coordinates) {
+      fetchPredictedLocations()
+    }
+  }, [viewMode, nLocations, formData.coordinates])
+
+  const fetchPredictedLocations = async () => {
+    if (!formData.coordinates) return
+    
+    setLoading(true)
+    try {
+      console.log("predicted one khula")
+      const response = await fetch('http://localhost:5000/predict', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          n_locations: nLocations,
+          min_distance_km: 1,
+          // You might want to include the current coordinates as reference
+          reference_lat: formData.coordinates.lat,
+          reference_lng: formData.coordinates.lng
+        })
+      })
+      
+      const data = await response.json()
+      // Assuming the API returns an array of {lat, lng} objects
+      setPredictedPorts(data.predictions || [])
+      console.log("predicted one khula" , data.predictions)
+    } catch (error) {
+      console.error('Error fetching predicted locations:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // Handle map click to set coordinates
   const handleMapClick = useCallback((e) => {
@@ -203,6 +302,17 @@ export default function AddStation() {
     setMap(null)
   }, [])
 
+
+  const handleViewModeChange = (mode) => {
+    setViewMode(mode)
+  }
+
+  const handleNLocationsChange = (e) => {
+    const value = Math.max(1, Math.min(10, parseInt(e.target.value) || 1))
+    setNLocations(value)
+  }
+
+
   if (loadError) return <div>Error loading maps</div>
   if (!isLoaded) return <div>Loading maps...</div>
 
@@ -217,14 +327,13 @@ export default function AddStation() {
           Back to Stations
         </button>
       </div>
-
+  
       <div className="bg-white rounded-lg shadow p-6">
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Basic Information */}
             <div className="space-y-4">
               <h2 className="text-lg font-semibold border-b pb-2">Basic Information</h2>
-              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Station Name*</label>
                 <input
@@ -236,7 +345,7 @@ export default function AddStation() {
                   required
                 />
               </div>
-
+  
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Address*</label>
                 <Autocomplete
@@ -254,7 +363,7 @@ export default function AddStation() {
                   />
                 </Autocomplete>
               </div>
-
+  
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Latitude</label>
@@ -285,7 +394,7 @@ export default function AddStation() {
                   />
                 </div>
               </div>
-
+  
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Charger Type*</label>
                 <select
@@ -300,7 +409,7 @@ export default function AddStation() {
                   <option value="ultra-fast">Ultra-Fast Charging</option>
                 </select>
               </div>
-
+  
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Status*</label>
                 <select
@@ -316,7 +425,6 @@ export default function AddStation() {
                 </select>
               </div>
             </div>
-
             {/* Technical Details */}
             <div className="space-y-4">
               <h2 className="text-lg font-semibold border-b pb-2">Technical Details</h2>
@@ -375,18 +483,55 @@ export default function AddStation() {
                 />
               </div>
             </div>
-
-            {/* Map Section */}
+            {/* Map Section with Toggle */}
             <div className="md:col-span-2">
-              <h2 className="text-lg font-semibold border-b pb-2 mb-4">Location</h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold">Location</h2>
+                <div className="flex items-center space-x-4">
+                  <div className="flex bg-gray-200 rounded-lg p-1">
+                    <button 
+                      type="button"
+                      className={`px-3 py-1 rounded-md ${viewMode === 'existing' ? 'bg-white shadow-sm' : ''}`}
+                      onClick={() => handleViewModeChange('existing')}
+                    >
+                      Existing Ports
+                    </button>
+                    <button 
+                      type="button"
+                      className={`px-3 py-1 rounded-md ${viewMode === 'predicted' ? 'bg-white shadow-sm' : ''}`}
+                      onClick={() => handleViewModeChange('predicted')}
+                    >
+                      Predicted Ports
+                    </button>
+                  </div>
+  
+                  {viewMode === 'predicted' && (
+                    <div className="flex items-center space-x-2">
+                      <label className="text-sm text-gray-700">Number of locations:</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="10"
+                        value={nLocations}
+                        onChange={handleNLocationsChange}
+                        className="w-16 px-2 py-1 border border-gray-300 rounded-md"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+  
               <p className="text-sm text-gray-600 mb-2">
-                Click on the map to set location or enter coordinates manually above
+                {viewMode === 'existing' 
+                  ? "Showing existing charging stations"
+                  : "Showing predicted optimal locations"}
               </p>
+  
               <div className="h-96 rounded-lg overflow-hidden border border-gray-300">
                 <GoogleMap
                   mapContainerStyle={mapContainerStyle}
                   center={formData.coordinates || defaultCenter}
-                  zoom={formData.coordinates ? 15 : 2}
+                  zoom={formData.coordinates ? 12 : 2}
                   onClick={handleMapClick}
                   onLoad={onLoad}
                   onUnmount={onUnmount}
@@ -396,18 +541,44 @@ export default function AddStation() {
                     fullscreenControl: true
                   }}
                 >
+                  {/* New station marker */}
                   {formData.coordinates && (
-                    <Marker position={formData.coordinates} />
+                    <Marker 
+                      position={formData.coordinates} 
+                      icon={newPortIcon}
+                    />
                   )}
+  
+                  {/* Existing ports markers */}
+                  {viewMode === 'existing' && existingPorts.map((port, index) => (
+                    <Marker
+                      key={`existing-${index}`}
+                      position={port.coordinates}
+                      icon={existingPortIcon}
+                    />
+                  ))}
+  
+                  {/* Predicted ports markers */}
+                  {viewMode === 'predicted' && predictedPorts.map((port, index) => (
+                    <Marker
+                      key={`predicted-${index}`}
+                      position={{
+                        lat: port.latitude,  // Use `latitude` as `lat`
+                        lng: port.longitude  // Use `longitude` as `lng`
+                      }}
+                      icon={predictedPortIcon}
+                    />
+                  ))}
                 </GoogleMap>
               </div>
+  
               {formData.coordinates && (
                 <p className="text-sm text-gray-600 mt-2">
                   Selected coordinates: {formData.coordinates.lat.toFixed(6)}, {formData.coordinates.lng.toFixed(6)}
                 </p>
               )}
             </div>
-
+  
             {/* Amenities */}
             <div className="md:col-span-2">
               <h2 className="text-lg font-semibold border-b pb-2 mb-4">Amenities</h2>
@@ -431,7 +602,7 @@ export default function AddStation() {
               </div>
             </div>
           </div>
-
+  
           <div className="mt-6 flex justify-end space-x-3">
             <button
               type="button"
@@ -450,5 +621,6 @@ export default function AddStation() {
         </form>
       </div>
     </div>
-  )
+  );
+  
 }
