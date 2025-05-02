@@ -22,8 +22,8 @@ app.listen(8000, ()=>{
 connection(DB_URL);
 
 // if by any chance the server will crash, port will not charge any vehicle
-setInterval(async ()=>{
-    await fetch('http://localhost:8080/status',{
-        method:"POST",
-    })
-},10000)
+// setInterval(async ()=>{
+//     await fetch('http://localhost:8080/status',{
+//         method:"POST",
+//     })
+// },10000)

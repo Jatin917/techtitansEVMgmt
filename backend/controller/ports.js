@@ -1,7 +1,13 @@
 import PortReport from '../model/port.js';
 
-
+import * as XLSX from 'xlsx';
+import path from 'path';
+import fs from 'fs';
 const now = new Date();
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import Papa from 'papaparse';
+
 
 const oneDayAgo = new Date(now);
 oneDayAgo.setDate(now.getDate() - 1);
@@ -144,3 +150,66 @@ export const addStation = async(req, res) =>{
         console.log(error)
     }
 }
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+export const getAllStations = async (req, res) => {
+    try {
+      const filePath = path.join(__dirname, '../stations/charging_stations.csv');
+      const fileContent = fs.readFileSync(filePath, 'utf8'); // Read as string
+  
+      const parsed = Papa.parse(fileContent, {
+        header: true,
+        skipEmptyLines: true
+      });
+  
+      const ports = parsed.data
+        .filter(port => port.latitude && port.longitude)
+        .map(port => ({
+          coordinates: {
+            lat: parseFloat(port.latitude),
+            lng: parseFloat(port.longitude)
+          }
+        }));
+  
+      return res.status(200).json({ data: ports });
+  
+    } catch (error) {
+      console.error('Error reading CSV file:', error);
+      res.status(500).send('Failed to read station data');
+    }
+  };
+
+  
+  export const addStationRow = async (req, res) => {
+    try {
+      const newRow = req.body;
+  
+      const csvFilePath = path.join(__dirname, '../stations/charging_stations.csv');
+  
+      // Define the fixed header order
+      const headers = [
+        "uid","name","vendor_name","address","latitude","longitude","city","country",
+        "open","close","logo_url","staff","payment_modes","contact_numbers",
+        "station_type","postal_code","zone","0","available","capacity",
+        "cost_per_unit","power_type","total","type","vehicle_type"
+      ];
+  
+      // Build row values in the exact header order
+      const values = headers.map(header => {
+        const val = newRow[header] !== undefined ? newRow[header] : '';
+        return `"${String(val).replace(/"/g, '""')}"`; // CSV-safe
+      });
+  
+      const rowLine = values.join(',') + '\n';
+  
+      // Append row to the CSV file
+      fs.appendFileSync(csvFilePath, rowLine, 'utf8');
+  
+      res.status(200).json({ message: 'Row added successfully' });
+    } catch (err) {
+      console.error('Error adding row to CSV:', err);
+      res.status(500).json({ error: 'Failed to write to CSV' });
+    }
+  };
+  
