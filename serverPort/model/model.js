@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { v4 as uuidv4 } from 'uuid';
 
 const vehicleChargeSchema = new mongoose.Schema(
   {
@@ -20,21 +21,30 @@ const vehicleChargeSchema = new mongoose.Schema(
 );
 
 const portReportSchema = new mongoose.Schema({
-  port_id: { type: String, required: true },
-  station_id: { type: String, required: true },
-
+  port_id: { type: String, default: uuidv4 },
+  station_id: { type: String, default: uuidv4 },
   status: {
     type: String,
     enum: ["idle", "charging", "fault", "offline"],
     required: true,
   },
   last_ping: { type: Date, default: Date.now },
+  name:{type:String},
 
-  cost_per_kWh: { type: Number, required: true }, // added at port level
+  // cost_per_kWh: { type: Number, required: true }, // added at port level
 
   avg_time_to_charge_minutes: { type: Number, default: 0 },
   vehicle_charges: [vehicleChargeSchema],
-
+  connectors:{type:Number, default:1},
+  address:{type:String},
+  pricePerKwh:{type:Number, default:0.1},
+  type:{type:String},
+  powerOutput:{type:String},
+  coordinates: {
+  lat: { type: String },
+  lng: { type: String },
+  operatingHours:{type:String, default:"24/7"},
+},
   reported_at: { type: Date, default: Date.now },
 });
 

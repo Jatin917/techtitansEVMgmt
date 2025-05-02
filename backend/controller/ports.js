@@ -129,13 +129,14 @@ export const addStation = async(req, res) =>{
     try {
         // console.log("chal rha hain", req.body);
         const formData = req.body;
-        const validStatuses = ['active', 'inactive', 'maintenance']; // Define valid statuses for the station
+        // const validStatuses = ['active', 'inactive', 'maintenance']; // Define valid statuses for the station
         console.log("status is ",  formData.status)
-        if (!validStatuses.includes(formData.status)) {
-        return res.status(400).json({ message: 'Invalid status value' });
-        }
+        const status = formData.status==='active' ? 'idle' : formData.status==='inactive'?'offline':'fault'
+        // if (!validStatuses.includes(formData.status)) {
+        // return res.status(400).json({ message: 'Invalid status value' });
+        // }
         // console.log(formData);
-        const response = await PortReport.create({port_id:formData.port_id, station_id:formData.station_id, status:formData.status, name:formData.name, connectors:formData.connectors, address:formData.address,  pricePerKwh:formData.pricePerKwh, type:formData.type, powerOutput:formData.powerOutput, coordinates:formData.coordinates})
+        const response = await PortReport.create({port_id:formData.port_id, station_id:formData.station_id, status:status, name:formData.name, connectors:formData.connectors, address:formData.address,  pricePerKwh:formData.pricePerKwh, type:formData.type, powerOutput:formData.powerOutput, coordinates:formData.coordinates})
         console.log(response);
         if(!response) return res.status(401).json({message:"Error adding the stations"});
         return res.status(200).json({message:"Added Station"})
