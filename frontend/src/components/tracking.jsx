@@ -10,7 +10,7 @@ export default function EVPortTracker() {
 
   async function fetchPorts() {
     try {
-      const response = await axios.get("http://localhost:8080/admin/ports");
+      const response = await axios.get(`${import.meta.env.VITE_BASE_URL_BACKEND}/admin/ports`);
       setPorts(response.data.data);
     } catch (error) {
       console.log(error);

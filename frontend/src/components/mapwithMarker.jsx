@@ -44,7 +44,7 @@ const MapWithClickHandler = () => {
   const handleAddLocation = async () => {
     // Call your backend API
     try {
-      const res = await fetch("http://localhost:5000/add_station", {
+      const res = await fetch(`${import.meta.env.VITE_BASE_URL_PYTHON_BACKEND}/add_station`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

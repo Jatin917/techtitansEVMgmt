@@ -128,7 +128,7 @@ const handleAddRow = (formData) => {
   useEffect(() => {
     const loadExistingPorts = async () => {
       try {
-        const data = await fetch('http://localhost:8000/admin/allstations');
+        const data = await fetch(`${import.meta.env.VITE_BASE_URL_BACKEND}/admin/allstations`);
         const response = await data.json()
         setExistingPorts(response.data);
         console.log("returned values ", response)
@@ -154,7 +154,7 @@ const handleAddRow = (formData) => {
     setLoading(true)
     try {
       console.log("predicted one khula")
-      const response = await fetch('http://localhost:5000/predict', {
+      const response = await fetch(`${import.meta.env.VITE_BASE_URL_PYTHON_BACKEND}/predict`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -307,13 +307,13 @@ const handleAddRow = (formData) => {
   const handleSubmit = async(e) => {
     e.preventDefault()
     // console.log('Form submitted:')
-    await axios.post('http://localhost:5000/add_station',{"latitude":formData.coordinates.lat, "longitude":formData.coordinates.lng});
+    await axios.post(`${import.meta.env.VITE_BASE_URL_PYTHON_BACKEND}/add_station`,{"latitude":formData.coordinates.lat, "longitude":formData.coordinates.lng});
     // console.log("hello")
-    await axios.post('http://localhost:8000/admin/add-station', formData);
+    await axios.post(`${import.meta.env.VITE_BASE_URL_BACKEND}/admin/add-station`, formData);
     // console.log("hello jii")
      const row = handleAddRow(formData)
      console.log("row to be added ", row);
-     await axios.post('http://localhost:8000/admin/addrowstation', row);
+     await axios.post(`${import.meta.env.VITE_BASE_URL_BACKEND}/admin/addrowstation`, row);
     // Here you would typically send data to your API
     navigate('/stations')
   }
