@@ -5,7 +5,7 @@ from geopy.distance import geodesic
 import pandas as pd
 from model import ChargingStationOptimizer
 from flask_cors import CORS
-
+import os
 
 # Load the trained model
 with open("svm_ev_anomaly_model.pkl", "rb") as file:
@@ -102,6 +102,6 @@ def add_station():
             'message': str(e)
         }), 400
 
-
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))  # Use the PORT environment variable if available
+    app.run(host='0.0.0.0', port=port, debug=True)
